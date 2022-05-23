@@ -52,8 +52,12 @@ module.exports = async (input, options) => {
 	}
 
 	const globs = await Promise.all([].concat(input).map(async x => {
-		const isDirectory = await pathType.isDirectory(getPath(x, options.cwd));
-		return isDirectory ? getGlob(x, options) : x;
+		try {
+			const isDirectory = await pathType.isDirectory(getPath(x, options.cwd));
+			return isDirectory ? getGlob(x, options) : x;
+		} catch {
+			return x;
+		}
 	}));
 
 	return [].concat(...globs);
@@ -69,7 +73,13 @@ module.exports.sync = (input, options) => {
 		throw new TypeError(`Expected \`cwd\` to be of type \`string\` but received type \`${typeof options.cwd}\``);
 	}
 
-	const globs = [].concat(input).map(x => pathType.isDirectorySync(getPath(x, options.cwd)) ? getGlob(x, options) : x);
+	const globs = [].concat(input).map(x => {
+		try {
+			return pathType.isDirectorySync(getPath(x, options.cwd)) ? getGlob(x, options) : x;
+		} catch {
+			return x;
+		}
+	});
 
 	return [].concat(...globs);
 };
